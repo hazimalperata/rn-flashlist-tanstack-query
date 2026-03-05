@@ -2,57 +2,56 @@ import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { Link, Stack } from 'expo-router';
-import { MoonStarIcon, StarIcon, SunIcon } from 'lucide-react-native';
+import { MoonStarIcon, SunIcon } from 'lucide-react-native';
 import * as React from 'react';
-import { Image, type ImageStyle, View } from 'react-native';
-import { Uniwind, useUniwind } from 'uniwind';
+import { ActivityIndicator, RefreshControl } from 'react-native';
+import { Uniwind } from 'uniwind';
+import useTheme from '@/hooks/useTheme';
+import { useCallback, useMemo } from 'react';
+import { useGetQuotes } from '@/api/quotes-service';
+import { Quote } from '@/api/quotes-service/types';
+import useRefreshOnFocus from '@/hooks/useRefreshOnFocus';
+import { FlashList, ListRenderItemInfo } from '@shopify/flash-list';
+import { ExtendedStackNavigationOptions } from 'expo-router/build/layouts/StackClient';
+import QuoteItem from '@/components/QuetoItem';
 
-const LOGO = {
-  light: require('@/assets/images/react-native-reusables-light.png'),
-  dark: require('@/assets/images/react-native-reusables-dark.png'),
-};
-
-const SCREEN_OPTIONS = {
-  title: 'React Native Reusables',
-  headerTransparent: true,
+const SCREEN_OPTIONS: ExtendedStackNavigationOptions = {
+  title: 'Quotes',
   headerRight: () => <ThemeToggle />,
 };
 
-const IMAGE_STYLE: ImageStyle = {
-  height: 76,
-  width: 76,
-};
+const PAGE_SIZE = 20;
 
 export default function Screen() {
-  const { theme } = useUniwind();
+  const { data, refetch, isFetchingNextPage, fetchNextPage } = useGetQuotes({
+    limit: PAGE_SIZE,
+  });
+
+  const allRows = useMemo(() => (data ? data.pages.flatMap((d) => d.quotes) : []), [data]);
+
+  const { onRefresh, isRefreshing } = useRefreshOnFocus(refetch);
+
+  const renderItem = useCallback(({ item, index }: ListRenderItemInfo<Quote>) => {
+    return <QuoteItem item={item} index={index} />;
+  }, []);
 
   return (
     <>
       <Stack.Screen options={SCREEN_OPTIONS} />
-      <View className="flex-1 items-center justify-center gap-8 p-4">
-        <Image source={LOGO[theme ?? 'light']} style={IMAGE_STYLE} resizeMode="contain" />
-        <View className="gap-2 p-4">
-          <Text className="ios:text-foreground text-muted-foreground font-mono text-sm">
-            1. Edit <Text variant="code">app/index.tsx</Text> to get started.
-          </Text>
-          <Text className="ios:text-foreground text-muted-foreground font-mono text-sm">
-            2. Save to see your changes instantly.
-          </Text>
-        </View>
-        <View className="flex-row gap-2">
-          <Link href="https://reactnativereusables.com" asChild>
-            <Button>
-              <Text>Browse the Docs</Text>
-            </Button>
-          </Link>
-          <Link href="https://github.com/founded-labs/react-native-reusables" asChild>
-            <Button variant="ghost">
-              <Text>Star the Repo</Text>
-              <Icon as={StarIcon} />
-            </Button>
-          </Link>
-        </View>
-      </View>
+      <Link href="/+not-found">
+        <Text>Baska sayfa</Text>
+      </Link>
+      <FlashList
+        removeClippedSubviews
+        contentContainerClassName="pb-safe"
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={renderItem}
+        data={allRows}
+        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
+        onEndReached={() => fetchNextPage()}
+        onEndReachedThreshold={0.8}
+        ListFooterComponent={isFetchingNextPage ? <ActivityIndicator /> : null}
+      />
     </>
   );
 }
@@ -63,7 +62,7 @@ const THEME_ICONS = {
 };
 
 function ThemeToggle() {
-  const { theme } = useUniwind();
+  const theme = useTheme();
 
   function toggleTheme() {
     const newTheme = theme === 'dark' ? 'light' : 'dark';

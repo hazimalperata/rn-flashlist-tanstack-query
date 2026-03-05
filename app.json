@@ -3,6 +3,9 @@
     "name": "minimal",
     "slug": "minimal",
     "version": "1.0.0",
+    "platforms": [
+      "android"
+    ],
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "minimal",
@@ -24,7 +27,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.hazimalperata.minimal"
     },
     "web": {
       "bundler": "metro",
