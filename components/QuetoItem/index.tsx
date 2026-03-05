@@ -4,7 +4,7 @@ import { View } from 'react-native';
 import { Badge } from '@/components/ui/badge';
 import { Text } from '@/components/ui/text';
 
-const QuoteItem = memo(({ item, index }: { item: Quote; index: number }) => {
+const QuoteItem = memo(function QuoteItem({ item, index }: { item: Quote; index: number }) {
   return (
     <View className="flex flex-row items-start gap-x-3 p-4">
       <Badge>
